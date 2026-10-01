@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 27% 97%;
+    --foreground: 30 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 10% 12%;
+    --primary: 30 10% 12%;
+    --primary-foreground: 42 27% 97%;
+    --secondary: 40 18% 92%;
+    --secondary-foreground: 30 10% 12%;
+    --muted: 40 14% 93%;
+    --muted-foreground: 30 8% 45%;
+    --accent: 35 25% 88%;
+    --accent-foreground: 30 10% 12%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 35 15% 87%;
+    --input: 35 15% 87%;
+    --ring: 30 10% 20%;
+    --chart-1: 30 10% 20%;
+    --chart-2: 35 25% 60%;
+    --chart-3: 40 20% 50%;
+    --chart-4: 30 15% 70%;
+    --chart-5: 35 20% 40%;
+    --radius: 0.25rem;
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-sans: 'Inter', system-ui, sans-serif;
+  }
+
+  .dark {
+    --background: 30 10% 8%;
+    --foreground: 42 20% 92%;
+    --card: 30 10% 10%;
+    --card-foreground: 42 20% 92%;
+    --popover: 30 10% 10%;
+    --popover-foreground: 42 20% 92%;
+    --primary: 42 20% 92%;
+    --primary-foreground: 30 10% 8%;
+    --secondary: 30 8% 16%;
+    --secondary-foreground: 42 20% 92%;
+    --muted: 30 8% 16%;
+    --muted-foreground: 40 10% 60%;
+    --accent: 30 8% 18%;
+    --accent-foreground: 42 20% 92%;
+    --destructive: 0 50% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 8% 20%;
+    --input: 30 8% 20%;
+    --ring: 42 20% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02";
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+@layer utilities {
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 {
+    transition-delay: 0.1s;
+  }
+  .reveal-delay-2 {
+    transition-delay: 0.2s;
+  }
+  .reveal-delay-3 {
+    transition-delay: 0.3s;
+  }
+  .reveal-delay-4 {
+    transition-delay: 0.4s;
+  }
+}
+
+@layer utilities {
+  .image-zoom-container {
+    overflow: hidden;
+  }
+  .image-zoom-container img {
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .image-zoom-container:hover img {
+    transform: scale(1.05);
+  }
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+}
+
+::selection {
+  background: hsl(30 10% 20% / 0.15);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
