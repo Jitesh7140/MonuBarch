@@ -18,7 +18,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="lg:col-span-1">
             <h3 className="font-serif text-3xl font-medium">
-              {settings.artist_name || 'Aarav Mehta'}
+              {settings.artist_name || 'MSARTIK'}
             </h3>
             <p className="text-sm text-primary-foreground/60 mt-1 uppercase tracking-[0.2em]">
               Portraits
@@ -90,7 +90,7 @@ export function PublicFooter() {
         <div className="mt-16 pt-8 border-t border-primary-foreground/15">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-xs text-primary-foreground/50">
-              &copy; {new Date().getFullYear()} {settings.brand_name || 'Aarav Mehta Portraits'}. All rights reserved.
+              &copy; {new Date().getFullYear()} {settings.brand_name || 'MSARTIK Portraits'}. All rights reserved.
             </p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <Link href="/privacy-policy" className="text-xs text-primary-foreground/50 hover:text-primary-foreground/80 transition-colors">Privacy Policy</Link>

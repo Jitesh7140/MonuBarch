@@ -26,8 +26,8 @@ export async function getSiteSettings(): Promise<Record<string, string>> {
 
 export function getDefaultSettings(): Record<string, string> {
   return {
-    artist_name: 'Aarav Mehta',
-    brand_name: 'Aarav Mehta Portraits',
+    artist_name: 'MSARTIK',
+    brand_name: 'MSARTIK Portraits',
     tagline: 'Turning Memories Into Art',
     subtitle: 'Handcrafted Pencil & Charcoal Portraits',
     description:

@@ -1,0 +1,38 @@
+  ▲ Next.js 13.5.1
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Ready in 1080ms
+ ○ compiling /(public)/page ...
+ ✓ Compiled /(public)/page in 8.9s (684 modules)
+ ✓ Compiled in 704ms (342 modules)
+ ✓ Compiled /(public)/portfolio/page in 704ms (658 modules)
+ ✓ Compiled /not-found in 390ms (663 modules)
+ ✓ Compiled /(public)/about/page in 480ms (669 modules)
+ ✓ Compiled in 687ms (347 modules)
+ ✓ Compiled in 1102ms (664 modules)
+ ✓ Compiled in 756ms (664 modules)
+ ✓ Compiled in 380ms (347 modules)
+ ✓ Compiled in 454ms (347 modules)
+ ✓ Compiled in 856ms (664 modules)
+ ✓ Compiled in 365ms (347 modules)
+ ✓ Compiled in 731ms (664 modules)
+ ✓ Compiled /(public)/pricing/page in 618ms (670 modules)
+ ✓ Compiled /(public)/how-it-works/page in 952ms (683 modules)
+ ✓ Compiled /(public)/testimonials/page in 1040ms (693 modules)
+ ✓ Compiled /(public)/contact/page in 250ms (697 modules)
+ ○ compiling /_error ...
+ ✓ Compiled /_error in 3s (846 modules)
+ ✓ Compiled (845 modules)
+ ✓ Compiled /(public)/pricing/page in 424ms (370 modules)
+ ✓ Compiled /(public)/how-it-works/page in 362ms (382 modules)
+ ✓ Compiled /(public)/contact/page in 182ms (386 modules)
+ ✓ Compiled /(public)/testimonials/page in 373ms (391 modules)
+ ✓ Compiled /not-found in 741ms (857 modules)
+ ✓ Compiled in 514ms (482 modules)
+ ✓ Compiled in 1584ms (850 modules)
+ ✓ Compiled /(public)/order/page in 585ms (856 modules)
+ ✓ Compiled /(public)/portfolio/page in 382ms (392 modules)
+ ✓ Compiled /(public)/page in 193ms (398 modules)
+ ✓ Compiled in 2.7s (856 modules)
+ ✓ Compiled /(public)/how-it-works/page in 491ms (386 modules)

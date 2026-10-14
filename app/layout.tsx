@@ -22,8 +22,8 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL('https://aaravmehtaportraits.com'),
   title: {
-    default: 'Aarav Mehta — Portrait Artist | Pencil & Charcoal Portraits',
-    template: '%s — Aarav Mehta Portraits',
+    default: 'MSARTIK — Portrait Artist | Pencil & Charcoal Portraits',
+    template: '%s — MSARTIK Portraits',
   },
   description:
     'Commission handcrafted pencil and charcoal portraits from a dedicated portrait artist. Turning your most meaningful photographs into timeless art.',
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    title: 'Aarav Mehta — Portrait Artist | Pencil & Charcoal Portraits',
+    title: 'MSARTIK — Portrait Artist | Pencil & Charcoal Portraits',
     description:
       'Commission handcrafted pencil and charcoal portraits from a dedicated portrait artist in India.',
-    siteName: 'Aarav Mehta Portraits',
+    siteName: 'MSARTIK Portraits',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Aarav Mehta — Portrait Artist',
+    title: 'MSARTIK — Portrait Artist',
     description: 'Handcrafted pencil & charcoal portraits. Commission your own.',
   },
   robots: {

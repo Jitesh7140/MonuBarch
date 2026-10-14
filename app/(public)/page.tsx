@@ -121,7 +121,7 @@ export default function HomePage() {
                 <Button asChild size="lg" className="rounded-none bg-white text-black hover:bg-white/90 px-8">
                   <Link href="/order">Order a Portrait</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="rounded-none border-white/40 text-white hover:bg-white/10 hover:text-white hover:border-white/60 px-8">
+                <Button asChild size="lg" variant="outline" className="rounded-none border-white/70 bg-transparent text-white hover:bg-white/20 hover:text-white hover:border-white px-8">
                   <Link href="/portfolio">View Portfolio</Link>
                 </Button>
               </div>

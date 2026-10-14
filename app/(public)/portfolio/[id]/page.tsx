@@ -103,7 +103,10 @@ export default function ArtworkDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
             {/* Image Gallery */}
             <div>
-              <div className="relative aspect-[4/5] image-zoom-container mb-4 onContextMenu={(e) => e.preventDefault()}>
+              <div
+                className="relative aspect-[4/5] image-zoom-container mb-4"
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 <Image
                   src={allImages[activeImage] || artwork.image_url}
                   alt={artwork.title}

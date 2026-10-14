@@ -50,8 +50,8 @@ INSERT INTO pricing_rules (type, key, label, numeric_value, sort_order) VALUES
 ON CONFLICT (type, key) DO UPDATE SET label = EXCLUDED.label, numeric_value = EXCLUDED.numeric_value;
 
 INSERT INTO site_settings (key, value) VALUES
-('artist_name', 'Aarav Mehta'),
-('brand_name', 'Aarav Mehta Portraits'),
+('artist_name', 'MSARTIK'),
+('brand_name', 'MSARTIK Portraits'),
 ('tagline', 'Turning Memories Into Art'),
 ('subtitle', 'Handcrafted Pencil & Charcoal Portraits'),
 ('description', 'Detailed, handcrafted portraits created from your most meaningful photographs.'),

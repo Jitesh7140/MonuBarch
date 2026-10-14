@@ -21,6 +21,7 @@ export function PublicHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const isHeroHeader = pathname === '/' && !scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -51,16 +52,16 @@ export function PublicHeader() {
           'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
           scrolled
             ? 'bg-background/95 backdrop-blur-md border-b border-border/60'
-            : 'bg-transparent'
+            : 'bg-black/35 backdrop-blur-sm border-b border-white/10'
         )}
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <Link href="/" className="group">
-              <span className="font-serif text-2xl font-medium tracking-tight">
-                Aarav Mehta
+            <Link href="/" className="group" aria-label="MSARTIK Portraits home">
+              <span className={cn('font-serif text-2xl font-medium tracking-tight', isHeroHeader && 'text-white')}>
+                MSARTIK
               </span>
-              <span className="block text-[10px] uppercase tracking-[0.25em] text-muted-foreground mt-0.5">
+              <span className={cn('block text-[10px] uppercase tracking-[0.25em] text-muted-foreground mt-0.5', isHeroHeader && 'text-white/75')}>
                 Portraits
               </span>
             </Link>
@@ -73,8 +74,8 @@ export function PublicHeader() {
                   className={cn(
                     'text-sm tracking-wide link-underline transition-colors',
                     pathname === link.href
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? (isHeroHeader ? 'text-white' : 'text-foreground')
+                      : (isHeroHeader ? 'text-white/85 hover:text-white' : 'text-muted-foreground hover:text-foreground')
                   )}
                 >
                   {link.label}
@@ -93,7 +94,7 @@ export function PublicHeader() {
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
             >
-              <Menu className="h-6 w-6" />
+              <Menu className={cn('h-6 w-6', isHeroHeader && 'text-white')} />
             </button>
           </div>
         </div>
@@ -103,7 +104,7 @@ export function PublicHeader() {
         <div className="fixed inset-0 z-[60] bg-background lg:hidden">
           <div className="flex items-center justify-between h-20 px-6">
             <Link href="/" onClick={() => setMenuOpen(false)}>
-              <span className="font-serif text-2xl font-medium">Aarav Mehta</span>
+              <span className="font-serif text-2xl font-medium">MSARTIK</span>
             </Link>
             <button
               onClick={() => setMenuOpen(false)}
