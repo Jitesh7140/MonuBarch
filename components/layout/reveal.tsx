@@ -16,14 +16,17 @@ export function Reveal({
   delay,
   as: Component = 'div',
 }: RevealProps) {
-  const { ref, isVisible } = useReveal<HTMLDivElement>();
+  const { ref: revealRef, isVisible } = useReveal<HTMLElement>();
+
+  const setRevealRef = (element: HTMLElement | null) => {
+    revealRef.current = element;
+  };
 
   const delayClass = delay ? `reveal-delay-${delay}` : '';
 
   return (
-    // @ts-expect-error - dynamic component
     <Component
-      ref={ref}
+      ref={setRevealRef}
       className={cn('reveal', delayClass, isVisible && 'is-visible', className)}
     >
       {children}
