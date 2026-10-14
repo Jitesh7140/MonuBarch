@@ -74,7 +74,7 @@ export function calculatePrice(
     mediumAdjustment,
     sizeAdjustment,
     extraPeople,
-    framing,
+    framing: framingCost,
     addOns: addOnsTotal,
     expressFee,
     total: Math.max(0, total),
