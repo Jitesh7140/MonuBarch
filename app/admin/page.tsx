@@ -9,24 +9,32 @@ import { supabase } from '@/lib/supabase-client';
 import { formatINR } from '@/lib/pricing';
 import { getDefaultSettings } from '@/lib/settings';
 import type {
-  Artwork, ContactEnquiry, Order, PricingRule, SiteSetting, Testimonial,
+  Artwork, ContactEnquiry, Order, ShopProduct, SiteSetting, Testimonial,
 } from '@/types';
 
-type Tab = 'overview' | 'artworks' | 'testimonials' | 'pricing' | 'settings' | 'orders' | 'enquiries';
+type Tab = 'overview' | 'artworks' | 'testimonials' | 'shop' | 'settings' | 'orders' | 'enquiries';
 type ArtworkDraft = Omit<Artwork, 'id' | 'created_at' | 'updated_at'>;
+type ShopCollection = 'print' | 'original';
+type ShopProductDraft = Omit<ShopProduct, 'id' | 'created_at' | 'updated_at'>;
 
 const ADMIN_EMAIL = 'admin@msartik.local';
 const menu: { key: Tab; label: string; icon: typeof BarChart3 }[] = [
   { key: 'overview', label: 'Overview', icon: BarChart3 },
   { key: 'artworks', label: 'Portfolio', icon: ImageIcon },
   { key: 'testimonials', label: 'Testimonials', icon: Star },
-  { key: 'pricing', label: 'Pricing', icon: Package },
+  { key: 'shop', label: 'Shop', icon: Package },
   { key: 'settings', label: 'Website content', icon: Settings },
   { key: 'orders', label: 'Orders', icon: FileText },
   { key: 'enquiries', label: 'Contact queries', icon: Mail },
 ];
 
 const emptyArtwork = (): ArtworkDraft => ({
+  title: '', category: 'pencil', medium: 'pencil', description: '', size: 'A4',
+  price: 0, year: new Date().getFullYear(), image_url: '', featured: false,
+  published: true, watermark: false, sort_order: 0,
+});
+
+const emptyShopProduct = (): ShopProductDraft => ({
   title: '', category: 'pencil', medium: 'pencil', description: '', size: 'A4',
   price: 0, year: new Date().getFullYear(), image_url: '', featured: false,
   published: true, watermark: false, sort_order: 0,
@@ -46,13 +54,16 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [printDesigns, setPrintDesigns] = useState<ShopProduct[]>([]);
+  const [originalDrawings, setOriginalDrawings] = useState<ShopProduct[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [pricing, setPricing] = useState<PricingRule[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>(getDefaultSettings());
   const [orders, setOrders] = useState<Order[]>([]);
   const [enquiries, setEnquiries] = useState<ContactEnquiry[]>([]);
   const [artworkDraft, setArtworkDraft] = useState<ArtworkDraft>(emptyArtwork());
   const [editingArtwork, setEditingArtwork] = useState<string | null>(null);
+  const [shopDraft, setShopDraft] = useState<ShopProductDraft>(emptyShopProduct());
+  const [editingShopProduct, setEditingShopProduct] = useState<{ id: string; collection: ShopCollection } | null>(null);
   const [testimonialDraft, setTestimonialDraft] = useState({ customer_name: '', review: '', rating: 5, published: true, sort_order: 0 });
   const [editingTestimonial, setEditingTestimonial] = useState<string | null>(null);
 
@@ -67,17 +78,19 @@ export default function AdminPage() {
 
   async function loadDashboard() {
     setLoading(true);
-    const [artworkResult, testimonialResult, pricingResult, settingsResult, orderResult, enquiryResult] = await Promise.all([
+    const [artworkResult, printResult, originalResult, testimonialResult, settingsResult, orderResult, enquiryResult] = await Promise.all([
       supabase.from('artworks').select('*').order('sort_order'),
+      supabase.from('print_designs').select('*').order('sort_order'),
+      supabase.from('original_drawings').select('*').order('sort_order'),
       supabase.from('testimonials').select('*').order('sort_order'),
-      supabase.from('pricing_rules').select('*').order('type').order('sort_order'),
       supabase.from('site_settings').select('key,value'),
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('contact_enquiries').select('*').order('created_at', { ascending: false }),
     ]);
     setArtworks((artworkResult.data ?? []) as Artwork[]);
+    setPrintDesigns((printResult.data ?? []) as ShopProduct[]);
+    setOriginalDrawings((originalResult.data ?? []) as ShopProduct[]);
     setTestimonials((testimonialResult.data ?? []) as Testimonial[]);
-    setPricing((pricingResult.data ?? []) as PricingRule[]);
     setOrders((orderResult.data ?? []) as Order[]);
     setEnquiries((enquiryResult.data ?? []) as ContactEnquiry[]);
     const receivedSettings = Object.fromEntries(((settingsResult.data ?? []) as SiteSetting[]).map((item) => [item.key, item.value]));
@@ -112,13 +125,36 @@ export default function AdminPage() {
 
   function editArtwork(item: Artwork) {
     const { id, created_at, updated_at, ...draft } = item;
-    setArtworkDraft(draft); setEditingArtwork(id); setTab('artworks');
+    setArtworkDraft(draft); setEditingArtwork(id);
   }
 
   async function deleteArtwork(id: string) {
     if (!window.confirm('Delete this artwork?')) return;
     const { error } = await supabase.from('artworks').delete().eq('id', id);
     showNotice(error ? error.message : 'Artwork deleted.'); if (!error) void loadDashboard();
+  }
+
+  async function saveShopProduct(event: FormEvent<HTMLFormElement>, collection: ShopCollection) {
+    event.preventDefault();
+    const table = collection === 'print' ? 'print_designs' : 'original_drawings';
+    const payload = { ...shopDraft, price: Number(shopDraft.price) || 0, year: Number(shopDraft.year) || null, sort_order: Number(shopDraft.sort_order) || 0 };
+    const result = editingShopProduct
+      ? await supabase.from(table).update(payload).eq('id', editingShopProduct.id)
+      : await supabase.from(table).insert(payload);
+    if (result.error) { showNotice(result.error.message); return; }
+    setShopDraft(emptyShopProduct()); setEditingShopProduct(null); showNotice('Shop item saved.'); void loadDashboard();
+  }
+
+  function editShopProduct(item: ShopProduct, collection: ShopCollection) {
+    const { id, created_at, updated_at, ...draft } = item;
+    setShopDraft(draft); setEditingShopProduct({ id, collection }); setTab('shop');
+  }
+
+  async function deleteShopProduct(id: string, collection: ShopCollection) {
+    if (!window.confirm('Delete this shop item?')) return;
+    const table = collection === 'print' ? 'print_designs' : 'original_drawings';
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    showNotice(error ? error.message : 'Shop item deleted.'); if (!error) void loadDashboard();
   }
 
   async function saveTestimonial(event: FormEvent<HTMLFormElement>) {
@@ -136,11 +172,6 @@ export default function AdminPage() {
     const rows = Object.entries(settings).map(([key, value]) => ({ key, value }));
     const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
     showNotice(error ? error.message : 'Website content updated.'); if (!error) void loadDashboard();
-  }
-
-  async function updatePricing(id: string, numeric_value: number) {
-    const { error } = await supabase.from('pricing_rules').update({ numeric_value }).eq('id', id);
-    showNotice(error ? error.message : 'Price updated.'); if (!error) void loadDashboard();
   }
 
   async function updateRecord(table: 'orders' | 'contact_enquiries', id: string, changes: Record<string, string>) {
@@ -168,7 +199,7 @@ export default function AdminPage() {
           {tab === 'overview' && <Overview stats={stats} orders={orders} enquiries={enquiries} setTab={setTab} />}
           {tab === 'artworks' && <ArtworkManager artworks={artworks} draft={artworkDraft} setDraft={setArtworkDraft} editing={editingArtwork} onSave={saveArtwork} onEdit={editArtwork} onDelete={deleteArtwork} cancel={() => { setArtworkDraft(emptyArtwork()); setEditingArtwork(null); }} />}
           {tab === 'testimonials' && <TestimonialManager testimonials={testimonials} draft={testimonialDraft} setDraft={setTestimonialDraft} editing={editingTestimonial} setEditing={setEditingTestimonial} onSave={saveTestimonial} reload={loadDashboard} notice={showNotice} />}
-          {tab === 'pricing' && <PricingManager rules={pricing} update={updatePricing} />}
+          {tab === 'shop' && <ShopManager printDesigns={printDesigns} originalDrawings={originalDrawings} draft={shopDraft} setDraft={setShopDraft} editing={editingShopProduct} setEditing={setEditingShopProduct} onSave={saveShopProduct} onEdit={editShopProduct} onDelete={deleteShopProduct} />}
           {tab === 'settings' && <SettingsManager settings={settings} setSettings={setSettings} onSave={saveSettings} />}
           {tab === 'orders' && <OrdersManager orders={orders} update={updateRecord} />}
           {tab === 'enquiries' && <EnquiryManager enquiries={enquiries} update={updateRecord} />}
@@ -191,7 +222,54 @@ function ArtworkManager({ artworks, draft, setDraft, editing, onSave, onEdit, on
 
 function TestimonialManager({ testimonials, draft, setDraft, editing, setEditing, onSave, reload, notice }: any) { const edit = (item: Testimonial) => { setDraft({ customer_name: item.customer_name, review: item.review, rating: item.rating, published: item.published, sort_order: item.sort_order }); setEditing(item.id); }; const remove = async (id: string) => { if (!window.confirm('Delete this testimonial?')) return; const { error } = await supabase.from('testimonials').delete().eq('id', id); notice(error ? error.message : 'Testimonial deleted.'); if (!error) void reload(); }; return <><SectionTitle eyebrow="Social proof" title={editing ? 'Edit testimonial' : 'Testimonials'} /><form onSubmit={onSave} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"><div className="grid gap-4 md:grid-cols-2"><Field label="Client name"><input required className={inputClass} value={draft.customer_name} onChange={(e) => setDraft({ ...draft, customer_name: e.target.value })} /></Field><Field label="Rating"><select className={inputClass} value={draft.rating} onChange={(e) => setDraft({ ...draft, rating: Number(e.target.value) })}>{[5,4,3,2,1].map((n) => <option key={n} value={n}>{n} stars</option>)}</select></Field></div><div className="mt-4"><Field label="Review"><textarea required rows={4} className={inputClass} value={draft.review} onChange={(e) => setDraft({ ...draft, review: e.target.value })} /></Field></div><div className="mt-4 flex gap-5 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={draft.published} onChange={(e) => setDraft({ ...draft, published: e.target.checked })} />Published</label><label className="flex items-center gap-2">Order <input type="number" className="w-20 rounded border px-2 py-1" value={draft.sort_order} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} /></label></div><div className="mt-5 flex gap-3"><button className="rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white">Save testimonial</button>{editing && <button type="button" className="rounded-md border px-4 py-2.5 text-sm" onClick={() => { setEditing(null); setDraft({ customer_name: '', review: '', rating: 5, published: true, sort_order: 0 }); }}>Cancel</button>}</div></form><div className="mt-8 grid gap-4 lg:grid-cols-2">{testimonials.map((item: Testimonial) => <article key={item.id} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"><div className="flex justify-between"><p className="font-medium">{item.customer_name}</p><p>{'★'.repeat(item.rating)}</p></div><p className="mt-3 text-sm leading-6 text-stone-600">{item.review}</p><div className="mt-4 flex gap-3"><button onClick={() => edit(item)} className="text-sm underline">Edit</button><button onClick={() => void remove(item.id)} className="text-sm text-red-700 underline">Delete</button></div></article>)}</div></>; }
 
-function PricingManager({ rules, update }: { rules: PricingRule[]; update: (id: string, value: number) => void }) { return <><SectionTitle eyebrow="Commission calculator" title="Pricing rules" /><div className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm"><div className="divide-y divide-stone-100">{rules.map((rule) => <div key={rule.id} className="grid gap-3 p-4 sm:grid-cols-[1fr_150px_auto] sm:items-center"><div><p className="font-medium">{rule.label}</p><p className="text-xs uppercase tracking-wide text-stone-500">{rule.type.replace('_', ' ')} · {rule.key}</p></div><input type="number" defaultValue={rule.numeric_value} className={inputClass} onBlur={(e) => { const value = Number(e.target.value); if (value !== Number(rule.numeric_value)) void update(rule.id, value); }} /><span className="text-sm text-stone-500">INR</span></div>)}</div></div></>; }
+function ShopManager({ printDesigns, originalDrawings, draft, setDraft, editing, setEditing, onSave, onEdit, onDelete }: any) {
+  const [collection, setCollection] = useState<ShopCollection>('print');
+  const isPrint = collection === 'print';
+  const collectionLabel = isPrint ? 'Print-ready designs' : 'Original drawings';
+  const collectionItems: ShopProduct[] = isPrint ? printDesigns : originalDrawings;
+
+  function switchCollection(next: ShopCollection) {
+    setCollection(next);
+    setEditing(null);
+    setDraft(emptyShopProduct());
+  }
+
+  function editItem(item: ShopProduct) {
+    onEdit(item, collection);
+  }
+
+  function cancel() {
+    setEditing(null);
+    setDraft(emptyShopProduct());
+  }
+
+  return <>
+    <SectionTitle eyebrow="Shop manager" title={collectionLabel}>
+      <div className="flex rounded-md border border-stone-300 bg-white p-1 text-sm shadow-sm">
+        <button type="button" onClick={() => switchCollection('print')} className={`rounded px-3 py-2 ${isPrint ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>Print-ready designs</button>
+        <button type="button" onClick={() => switchCollection('original')} className={`rounded px-3 py-2 ${!isPrint ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>Original drawings</button>
+      </div>
+    </SectionTitle>
+    <p className="-mt-4 mb-6 max-w-2xl text-sm leading-6 text-stone-600">Add and edit the items shown in this collection. A design added here will only appear in its matching public shop.</p>
+    <form onSubmit={(event) => onSave(event, collection)} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Title"><input required className={inputClass} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></Field>
+        <Field label="Image URL"><input required type="url" className={inputClass} value={draft.image_url} onChange={(e) => setDraft({ ...draft, image_url: e.target.value })} /></Field>
+        <Field label="Category"><select className={inputClass} value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>{['pencil', 'charcoal', 'hyper_realistic', 'couple', 'family', 'celebrity', 'pet', 'custom'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+        <Field label="Medium"><select className={inputClass} value={draft.medium} onChange={(e) => setDraft({ ...draft, medium: e.target.value })}>{['pencil', 'charcoal', 'colour'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+        <Field label="Size"><input className={inputClass} value={draft.size ?? ''} onChange={(e) => setDraft({ ...draft, size: e.target.value })} /></Field>
+        <Field label="Price (₹)"><input type="number" min="0" className={inputClass} value={draft.price ?? 0} onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })} /></Field>
+        <Field label="Year"><input type="number" className={inputClass} value={draft.year ?? ''} onChange={(e) => setDraft({ ...draft, year: Number(e.target.value) })} /></Field>
+        <Field label="Display order"><input type="number" className={inputClass} value={draft.sort_order} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} /></Field>
+      </div>
+      <div className="mt-4"><Field label="Description"><textarea className={inputClass} rows={3} value={draft.description ?? ''} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></Field></div>
+      <div className="mt-4 flex flex-wrap gap-5 text-sm">{['published', 'featured', 'watermark'].map((key) => <label key={key} className="flex items-center gap-2 capitalize"><input type="checkbox" checked={Boolean(draft[key])} onChange={(e) => setDraft({ ...draft, [key]: e.target.checked })} />{key}</label>)}</div>
+      <div className="mt-5 flex gap-3"><button className="inline-flex items-center gap-2 rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white"><Save className="h-4 w-4" />{editing ? 'Update' : 'Add'} {isPrint ? 'print design' : 'original drawing'}</button>{editing && <button type="button" onClick={cancel} className="rounded-md border border-stone-300 px-4 py-2.5 text-sm">Cancel</button>}</div>
+    </form>
+    <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{collectionItems.map((item: Artwork) => <article key={item.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm"><img src={item.image_url} alt="" className="h-44 w-full object-cover" /><div className="p-4"><div className="flex justify-between gap-3"><h2 className="font-serif text-xl">{item.title}</h2><span className="text-xs text-stone-500">{item.published ? 'Live' : 'Hidden'}</span></div><p className="mt-1 text-sm text-stone-500">{formatINR(Number(item.price || 0))}</p><div className="mt-4 flex gap-3"><button onClick={() => editItem(item)} className="text-sm font-medium underline">Edit</button><button onClick={() => onDelete(item.id)} className="text-sm font-medium text-red-700 underline">Delete</button></div></div></article>)}</div>
+    {!collectionItems.length && <p className="py-12 text-center text-sm text-stone-500">No {collectionLabel.toLowerCase()} yet. Add your first item above.</p>}
+  </>;
+}
 
 function SettingsManager({ settings, setSettings, onSave }: any) { const labels: Record<string, string> = { artist_name: 'Artist name', brand_name: 'Brand name', tagline: 'Main heading', subtitle: 'Hero subtitle', description: 'Hero description', whatsapp_number: 'WhatsApp number', instagram_url: 'Instagram URL', instagram_handle: 'Instagram handle', email: 'Contact email', phone: 'Phone number', studio_location: 'Studio location', about_intro: 'About introduction', about_style: 'About style', about_inspiration: 'About inspiration', shipping_policy: 'Shipping policy', refund_policy: 'Refund policy', terms_text: 'Terms & conditions', privacy_text: 'Privacy policy' }; const keys = Array.from(new Set([...Object.keys(labels), ...Object.keys(settings)])); return <><SectionTitle eyebrow="Website copy" title="Content & contact details" /><form onSubmit={onSave} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"><div className="grid gap-5 md:grid-cols-2">{keys.map((key) => <Field key={key} label={labels[key] ?? key}>{['description','about_intro','about_style','about_inspiration','shipping_policy','refund_policy','terms_text','privacy_text'].includes(key) ? <textarea rows={4} className={inputClass} value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} /> : <input className={inputClass} value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />}</Field>)}</div><button className="mt-6 inline-flex items-center gap-2 rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white"><Save className="h-4 w-4" />Save website content</button></form></>; }
 

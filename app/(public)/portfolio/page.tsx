@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArtworkCard } from '@/components/gallery/artwork-card';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Reveal } from '@/components/layout/reveal';
 import { supabase } from '@/lib/supabase-client';
 import type { Artwork } from '@/types';
@@ -14,7 +15,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      let query = supabase
+      const query = supabase
         .from('artworks')
         .select('*')
         .eq('published', true)
@@ -29,41 +30,23 @@ export default function PortfolioPage() {
 
   return (
     <>
-      <section className="pt-36 pb-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <Reveal>
-            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Portfolio</p>
-            <h1 className="font-serif text-5xl lg:text-6xl leading-tight mb-6">
-              The Portfolio
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Selected portrait works created in pencil, charcoal and colour. Each piece is a study of light, patience and presence.
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="pb-24">
+      <section className="pb-24 pt-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i}>
-                  <Skeleton className="w-full h-[480px]" />
-                  <Skeleton className="w-2/3 h-6 mt-4" />
-                  <Skeleton className="w-1/3 h-4 mt-2" />
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="aspect-square w-full" />)}
             </div>
           ) : artworks.length === 0 ? (
             <div className="text-center py-24">
               <p className="text-muted-foreground text-lg">No artworks have been published yet.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {artworks.map((art, i) => (
-                <Reveal key={art.id} delay={((i % 3) + 1) as 1 | 2 | 3}>
-                  <ArtworkCard artwork={art} index={i} />
+                <Reveal key={art.id} delay={((i % 4) + 1) as 1 | 2 | 3 | 4}>
+                  <Link href={`/portfolio/${art.id}`} aria-label={`View ${art.title}`} className="group relative block aspect-square overflow-hidden bg-muted">
+                    <Image src={art.image_url} alt={art.title} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="object-cover transition duration-700 group-hover:scale-105" />
+                  </Link>
                 </Reveal>
               ))}
             </div>

@@ -37,6 +37,24 @@ export interface ArtworkImage {
   created_at: string;
 }
 
+export interface ShopProduct {
+  id: string;
+  title: string;
+  category: ArtworkCategory;
+  medium: ArtworkMedium;
+  description: string | null;
+  size: string | null;
+  price: number | null;
+  year: number | null;
+  image_url: string;
+  featured: boolean;
+  published: boolean;
+  watermark: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type PricingRuleType =
   | 'base'
   | 'medium'
