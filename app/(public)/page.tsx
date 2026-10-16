@@ -9,19 +9,7 @@ import { Reveal } from '@/components/layout/reveal';
 import { ArtworkCard } from '@/components/gallery/artwork-card';
 import { supabase } from '@/lib/supabase-client';
 import { getSiteSettings } from '@/lib/settings';
-import { CATEGORY_LABELS, formatINR } from '@/lib/pricing';
-import type { Artwork, Testimonial, PricingRule } from '@/types';
-
-const CATEGORIES = [
-  { key: 'pencil', label: 'Pencil Portraits' },
-  { key: 'charcoal', label: 'Charcoal Portraits' },
-  { key: 'hyper_realistic', label: 'Hyper-Realistic Art' },
-  { key: 'couple', label: 'Couple Portraits' },
-  { key: 'family', label: 'Family Portraits' },
-  { key: 'celebrity', label: 'Celebrity Portraits' },
-  { key: 'pet', label: 'Pet Portraits' },
-  { key: 'custom', label: 'Custom Artwork' },
-];
+import type { Artwork, Testimonial } from '@/types';
 
 const STEPS = [
   { number: '01', title: 'Choose Your Portrait', desc: 'Select your medium, size and number of people.' },
@@ -31,31 +19,18 @@ const STEPS = [
   { number: '05', title: 'Delivered With Care', desc: 'Your finished artwork is carefully packaged and delivered.' },
 ];
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  pencil: 'https://images.pexels.com/photos/7608653/pexels-photo-7608653.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  charcoal: 'https://images.pexels.com/photos/36738957/pexels-photo-36738957.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  hyper_realistic: 'https://images.pexels.com/photos/7608654/pexels-photo-7608654.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  couple: 'https://images.pexels.com/photos/4752046/pexels-photo-4752046.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  family: 'https://images.pexels.com/photos/4752047/pexels-photo-4752047.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  celebrity: 'https://images.pexels.com/photos/2123111/pexels-photo-2123111.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  pet: 'https://images.pexels.com/photos/3777910/pexels-photo-3777910.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  custom: 'https://images.pexels.com/photos/39108160/pexels-photo-39108160.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-};
-
 export default function HomePage() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [basePrices, setBasePrices] = useState<Record<string, number>>({});
   const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function loadData() {
-      const [artRes, testRes, priceRes, settingsData] = await Promise.all([
+      const [artRes, testRes, settingsData] = await Promise.all([
         supabase
           .from('artworks')
           .select('*')
           .eq('published', true)
-          .eq('featured', true)
           .order('sort_order', { ascending: true })
           .limit(6),
         supabase
@@ -64,30 +39,17 @@ export default function HomePage() {
           .eq('published', true)
           .order('sort_order', { ascending: true })
           .limit(3),
-        supabase
-          .from('pricing_rules')
-          .select('*')
-          .eq('type', 'base')
-          .eq('active', true)
-          .order('sort_order', { ascending: true }),
         getSiteSettings(),
       ]);
 
       if (artRes.data) setArtworks(artRes.data as Artwork[]);
       if (testRes.data) setTestimonials(testRes.data as Testimonial[]);
-      if (priceRes.data) {
-        const map: Record<string, number> = {};
-        for (const r of priceRes.data as PricingRule[]) {
-          map[r.key] = Number(r.numeric_value);
-        }
-        setBasePrices(map);
-      }
       setSettings(settingsData);
     }
     loadData();
   }, []);
 
-  const heroImage = artworks[0]?.image_url || CATEGORY_IMAGES.pencil;
+  const heroImage = artworks[0]?.image_url || '/portfolio/portrait-grace.png';
 
   return (
     <>
@@ -150,7 +112,7 @@ export default function HomePage() {
             {artworks.length > 0 ? (
               artworks.map((art, i) => (
                 <Reveal key={art.id} delay={(i % 3 + 1) as 1 | 2 | 3}>
-                  <ArtworkCard artwork={art} index={i} />
+                  <ArtworkCard artwork={art} index={i} imageOnly />
                 </Reveal>
               ))
             ) : (
@@ -197,35 +159,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CATEGORIES */}
+      {/* COLLECTION CHOOSER */}
       <section className="py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <Reveal className="mb-16 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Categories</p>
-            <h2 className="font-serif text-4xl lg:text-5xl">Explore by Subject</h2>
+        <div className="mx-auto max-w-5xl px-6 lg:px-8">
+          <Reveal className="text-center">
+            <p className="mb-4 text-xs uppercase tracking-[0.25em] text-muted-foreground">The collection</p>
+            <h2 className="font-serif text-4xl lg:text-6xl">Choose your artwork.</h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">Choose a print-ready design to print yourself, or an original hard-copy portrait delivered to you.</p>
           </Reveal>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-            {CATEGORIES.map((cat, i) => (
-              <Reveal key={cat.key} delay={((i % 4) + 1) as 1 | 2 | 3 | 4}>
-                <Link
-                  href={`/portfolio?category=${cat.key}`}
-                  className="group block relative aspect-[3/4] image-zoom-container"
-                >
-                  <Image
-                    src={CATEGORY_IMAGES[cat.key]}
-                    alt={cat.label}
-                    fill
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-500" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
-                    <h3 className="font-serif text-lg lg:text-xl text-white">{cat.label}</h3>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
+          <div className="mt-14 grid gap-7 md:grid-cols-2 md:gap-6">
+            <Reveal>
+              <div><Link href="/prints" className="group relative block aspect-[4/5] w-full overflow-hidden text-center transition duration-500 hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-4" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,.42)), url('/portfolio/portrait-grace.png')", backgroundPosition: 'center', backgroundSize: 'cover' }}><span className="absolute inset-0 bg-black/10 transition group-hover:bg-black/25" /><span className="relative flex h-full flex-col items-center justify-center px-6 text-white"><span className="font-serif text-3xl uppercase tracking-wide md:text-4xl">Print-ready designs</span><span className="mt-5 bg-white px-5 py-2 text-xs font-medium text-foreground">View options</span></span></Link><p className="mx-auto mt-4 max-w-xs text-center text-sm leading-relaxed text-muted-foreground">A high-resolution portrait file, prepared for you to print at home or with your preferred print studio.</p></div>
+            </Reveal>
+            <Reveal delay={2}>
+              <div><Link href="/originals" className="group relative block aspect-[4/5] w-full overflow-hidden text-center transition duration-500 hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-4" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,.42)), url('/portfolio/portrait-legacy.png')", backgroundPosition: 'center', backgroundSize: 'cover' }}><span className="absolute inset-0 bg-black/10 transition group-hover:bg-black/25" /><span className="relative flex h-full flex-col items-center justify-center px-6 text-white"><span className="font-serif text-3xl uppercase tracking-wide md:text-4xl">Original drawings</span><span className="mt-5 bg-white px-5 py-2 text-xs font-medium text-foreground">View options</span></span></Link><p className="mx-auto mt-4 max-w-xs text-center text-sm leading-relaxed text-muted-foreground">A physical, hand-crafted portrait delivered to your address, with optional framing.</p></div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -259,47 +207,6 @@ export default function HomePage() {
           <Reveal className="mt-16 text-center">
             <Button asChild size="lg" className="rounded-none bg-white text-black hover:bg-white/90 px-10">
               <Link href="/order">Start Your Portrait</Link>
-            </Button>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* PRICING PREVIEW */}
-      <section className="py-24 lg:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <Reveal className="mb-16 text-center">
-            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Transparent Pricing</p>
-            <h2 className="font-serif text-4xl lg:text-5xl mb-6">Starting Prices</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Every portrait is handcrafted with care. Prices vary by medium, size and detail. Use the calculator for an instant estimate.
-            </p>
-          </Reveal>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-border">
-            {[
-              { label: 'Single Portrait', key: 'single' },
-              { label: 'Couple Portrait', key: 'couple' },
-              { label: 'Family Portrait', key: 'family' },
-              { label: 'Pet Portrait', key: 'pet' },
-              { label: 'Large Custom', key: 'large_custom' },
-            ].map((item, i) => (
-              <Reveal key={item.key} delay={((i % 4) + 1) as 1 | 2 | 3 | 4}>
-                <div className="bg-card p-8 text-center h-full flex flex-col justify-between min-h-[200px]">
-                  <h3 className="font-serif text-xl mb-4">{item.label}</h3>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Starting from</p>
-                    <p className="font-serif text-3xl">
-                      {basePrices[item.key] ? formatINR(basePrices[item.key]) : '₹—'}
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-
-          <Reveal className="mt-12 text-center">
-            <Button asChild variant="outline" size="lg" className="rounded-none px-10">
-              <Link href="/pricing">Calculate Your Estimate</Link>
             </Button>
           </Reveal>
         </div>

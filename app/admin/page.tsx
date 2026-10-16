@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   BarChart3, FileText, ImageIcon, LogOut, Mail, MessageSquare,
-  Package, PencilLine, Plus, Save, Settings, Star, X,
+  Package, PencilLine, Plus, Save, Settings, Star, Upload, X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { formatINR } from '@/lib/pricing';
@@ -41,10 +41,44 @@ const emptyShopProduct = (): ShopProductDraft => ({
 });
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block text-sm font-medium text-stone-700"><span className="mb-1.5 block">{label}</span>{children}</label>;
+  return <div className="block text-sm font-medium text-stone-700" data-image-url-field={label === 'Image URL' ? 'true' : undefined}><label className="mb-1.5 block">{label}</label>{children}{label === 'Image URL' && <ImageUploader />}</div>;
 }
 
 const inputClass = 'w-full rounded-md border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-stone-800 focus:ring-2 focus:ring-stone-200';
+
+function ImageUploader() {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function uploadImage(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('Please choose an image file.'); return; }
+    if (file.size > 10 * 1024 * 1024) { setError('Image must be 10 MB or smaller.'); return; }
+
+    setUploading(true); setError('');
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `admin/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from('artwork-images').upload(path, file, {
+      cacheControl: '3600',
+      contentType: file.type,
+      upsert: false,
+    });
+    if (uploadError) {
+      setError(uploadError.message);
+    } else {
+      const { data } = supabase.storage.from('artwork-images').getPublicUrl(path);
+      const input = document.querySelector('[data-image-url-field="true"] input') as HTMLInputElement | null;
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      if (input && valueSetter) {
+        valueSetter.call(input, data.publicUrl);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    setUploading(false);
+  }
+
+  return <div className="mt-2 flex flex-wrap items-center gap-3"><button type="button" onClick={(event) => (event.currentTarget.querySelector('input') as HTMLInputElement)?.click()} className={`inline-flex items-center gap-2 rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm font-medium transition hover:bg-stone-100 ${uploading ? 'pointer-events-none opacity-60' : ''}`}><Upload className="h-4 w-4" />{uploading ? 'Uploading…' : 'Upload image'}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="sr-only" disabled={uploading} onChange={(e) => { void uploadImage(e.target.files?.[0]); e.currentTarget.value = ''; }} /></button><span className="text-xs font-normal text-stone-500">PNG, JPG, WebP or GIF · max 10 MB</span>{error && <p className="w-full text-xs font-normal text-red-700">Upload failed: {error}. Run the storage migration in Supabase first.</p>}</div>;
+}
 
 export default function AdminPage() {
   const [sessionReady, setSessionReady] = useState(false);
@@ -273,6 +307,28 @@ function ShopManager({ printDesigns, originalDrawings, draft, setDraft, editing,
 
 function SettingsManager({ settings, setSettings, onSave }: any) { const labels: Record<string, string> = { artist_name: 'Artist name', brand_name: 'Brand name', tagline: 'Main heading', subtitle: 'Hero subtitle', description: 'Hero description', whatsapp_number: 'WhatsApp number', instagram_url: 'Instagram URL', instagram_handle: 'Instagram handle', email: 'Contact email', phone: 'Phone number', studio_location: 'Studio location', about_intro: 'About introduction', about_style: 'About style', about_inspiration: 'About inspiration', shipping_policy: 'Shipping policy', refund_policy: 'Refund policy', terms_text: 'Terms & conditions', privacy_text: 'Privacy policy' }; const keys = Array.from(new Set([...Object.keys(labels), ...Object.keys(settings)])); return <><SectionTitle eyebrow="Website copy" title="Content & contact details" /><form onSubmit={onSave} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"><div className="grid gap-5 md:grid-cols-2">{keys.map((key) => <Field key={key} label={labels[key] ?? key}>{['description','about_intro','about_style','about_inspiration','shipping_policy','refund_policy','terms_text','privacy_text'].includes(key) ? <textarea rows={4} className={inputClass} value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} /> : <input className={inputClass} value={settings[key] ?? ''} onChange={(e) => setSettings({ ...settings, [key]: e.target.value })} />}</Field>)}</div><button className="mt-6 inline-flex items-center gap-2 rounded-md bg-stone-900 px-4 py-2.5 text-sm font-medium text-white"><Save className="h-4 w-4" />Save website content</button></form></>; }
 
-function OrdersManager({ orders, update }: { orders: Order[]; update: (table: 'orders' | 'contact_enquiries', id: string, changes: Record<string, string>) => void }) { return <><SectionTitle eyebrow="Commissions" title="Orders" /><div className="overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm"><table className="w-full min-w-[800px] text-left text-sm"><thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500"><tr><th className="p-4">Order</th><th>Client</th><th>Details</th><th>Amount</th><th>Status</th></tr></thead><tbody className="divide-y divide-stone-100">{orders.map((item) => <tr key={item.id}><td className="p-4 font-medium">{item.order_number}</td><td><p>{item.customer_name}</p><p className="text-stone-500">{item.email}</p></td><td>{item.medium} · {item.size} · {item.people_count} person</td><td>{formatINR(Number(item.final_price ?? item.estimated_price))}</td><td><select className="rounded border border-stone-300 bg-white px-2 py-1.5" value={item.order_status} onChange={(e) => void update('orders', item.id, { order_status: e.target.value })}>{['new','payment_pending','confirmed','drawing_in_progress','completed','shipped','delivered','cancelled'].map((x) => <option key={x}>{x}</option>)}</select></td></tr>)}</tbody></table></div></>; }
+function OrdersManager({ orders, update }: { orders: Order[]; update: (table: 'orders' | 'contact_enquiries', id: string, changes: Record<string, string>) => void }) {
+  const label = (value: string) => value.replaceAll('_', ' ');
+  const date = (value: string | null) => value ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(value)) : 'Not specified';
+
+  return <>
+    <SectionTitle eyebrow="Commissions" title="Orders" />
+    <div className="space-y-5">{orders.map((item) => <article key={item.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-4 border-b border-stone-200 bg-stone-50 p-5 lg:flex-row lg:items-start lg:justify-between">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Order {item.order_number}</p><h2 className="mt-1 font-serif text-3xl">{item.customer_name}</h2><p className="mt-1 text-sm text-stone-500">Received {date(item.created_at)}</p></div>
+        <div className="flex flex-wrap items-center gap-4"><p className="font-serif text-2xl">{formatINR(Number(item.final_price ?? item.estimated_price))}</p><label className="text-sm font-medium">Order status <select className="ml-2 rounded border border-stone-300 bg-white px-2 py-1.5 font-normal" value={item.order_status} onChange={(e) => void update('orders', item.id, { order_status: e.target.value })}>{['new', 'payment_pending', 'confirmed', 'drawing_in_progress', 'completed', 'shipped', 'delivered', 'cancelled'].map((value) => <option key={value} value={value}>{label(value)}</option>)}</select></label></div>
+      </div>
+      <div className="grid gap-7 p-5 lg:grid-cols-3">
+        <section><h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Client details</h3><dl className="mt-3 space-y-2 text-sm"><Info label="Email" value={item.email} /><Info label="Phone" value={item.phone} /><Info label="WhatsApp" value={item.whatsapp || 'Not provided'} /></dl></section>
+        <section><h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Portrait details</h3><dl className="mt-3 space-y-2 text-sm"><Info label="Medium" value={label(item.medium)} /><Info label="Size" value={item.size.toUpperCase()} /><Info label="People" value={`${item.people_count} ${item.people_count === 1 ? 'person' : 'people'}`} /><Info label="Framing" value={label(item.framing)} /></dl></section>
+        <section><h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Timeline & payment</h3><dl className="mt-3 space-y-2 text-sm"><Info label="Timeline" value={label(item.deadline_type)} /><Info label="Preferred date" value={date(item.deadline_date)} /><Info label="Payment" value={label(item.payment_status)} /></dl></section>
+        <section className="lg:col-span-2"><h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Delivery address</h3><p className="mt-3 whitespace-pre-line text-sm leading-6 text-stone-700">{[item.address, item.city, item.state, item.pincode].filter(Boolean).join('\n')}</p></section>
+        <section><h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Special instructions</h3><p className="mt-3 whitespace-pre-line text-sm leading-6 text-stone-700">{item.special_instructions || 'No special instructions provided.'}</p></section>
+      </div>
+    </article>)}{!orders.length && <p className="py-16 text-center text-stone-500">No commission requests yet.</p>}</div>
+  </>;
+}
+
+function Info({ label, value }: { label: string; value: string }) { return <div className="flex justify-between gap-4 border-b border-stone-100 pb-2 last:border-0"><dt className="text-stone-500">{label}</dt><dd className="text-right font-medium capitalize">{value}</dd></div>; }
 
 function EnquiryManager({ enquiries, update }: { enquiries: ContactEnquiry[]; update: (table: 'orders' | 'contact_enquiries', id: string, changes: Record<string, string>) => void }) { return <><SectionTitle eyebrow="Inbox" title="Contact queries" /><div className="space-y-4">{enquiries.map((item) => <article key={item.id} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="font-serif text-2xl">{item.subject}</h2><p className="mt-1 text-sm text-stone-500">{item.name} · <a className="underline" href={`mailto:${item.email}`}>{item.email}</a>{item.phone ? ` · ${item.phone}` : ''}</p></div><select className="rounded border border-stone-300 bg-white px-2 py-1.5 text-sm" value={item.status} onChange={(e) => void update('contact_enquiries', item.id, { status: e.target.value })}>{['new','read','responded','archived'].map((x) => <option key={x}>{x}</option>)}</select></div><p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-stone-700">{item.message}</p></article>)}{!enquiries.length && <p className="py-12 text-center text-stone-500">No contact queries yet.</p>}</div></>; }
