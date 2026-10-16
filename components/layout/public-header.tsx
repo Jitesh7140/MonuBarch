@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { getSiteSettings } from '@/lib/settings';
 
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
@@ -20,14 +21,22 @@ const NAV_LINKS = [
 export function PublicHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const pathname = usePathname();
   const isHeroHeader = pathname === '/' && !scrolled;
+  const artistName = settings.artist_name || 'MSARTIK';
+  const brandName = settings.brand_name || 'MSARTIK Portraits';
+  const brandSubtitle = brandName.replace(artistName, '').trim() || brandName;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    getSiteSettings().then(setSettings);
   }, []);
 
   useEffect(() => {
@@ -57,12 +66,12 @@ export function PublicHeader() {
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            <Link href="/" className="group" aria-label="MSARTIK Portraits home">
+            <Link href="/" className="group" aria-label={`${brandName} home`}>
               <span className={cn('font-serif text-2xl font-medium tracking-tight', isHeroHeader && 'text-white')}>
-                MSARTIK
+                {artistName}
               </span>
               <span className={cn('block text-[10px] uppercase tracking-[0.25em] text-muted-foreground mt-0.5', isHeroHeader && 'text-white/75')}>
-                Portraits
+                {brandSubtitle}
               </span>
             </Link>
 
@@ -104,7 +113,7 @@ export function PublicHeader() {
         <div className="fixed inset-0 z-[60] bg-background lg:hidden">
           <div className="flex items-center justify-between h-20 px-6">
             <Link href="/" onClick={() => setMenuOpen(false)}>
-              <span className="font-serif text-2xl font-medium">MSARTIK</span>
+              <span className="font-serif text-2xl font-medium">{artistName}</span>
             </Link>
             <button
               onClick={() => setMenuOpen(false)}

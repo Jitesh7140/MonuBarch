@@ -3,11 +3,7 @@
 import { supabase } from '@/lib/supabase-client';
 import type { SiteSetting } from '@/types';
 
-let settingsCache: Record<string, string> | null = null;
-
 export async function getSiteSettings(): Promise<Record<string, string>> {
-  if (settingsCache) return settingsCache;
-
   const { data, error } = await supabase
     .from('site_settings')
     .select('key, value');
@@ -20,8 +16,9 @@ export async function getSiteSettings(): Promise<Record<string, string>> {
   for (const item of data as SiteSetting[]) {
     map[item.key] = item.value;
   }
-  settingsCache = { ...getDefaultSettings(), ...map };
-  return settingsCache;
+  // Settings are edited directly from the admin panel, so always request a
+  // fresh value instead of holding an outdated client-side copy.
+  return { ...getDefaultSettings(), ...map };
 }
 
 export function getDefaultSettings(): Record<string, string> {

@@ -74,7 +74,7 @@ export default function HomePage() {
                 {settings.subtitle || 'Handcrafted Pencil & Charcoal Portraits'}
               </p>
               <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05] animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                Turning Memories<br />Into Art
+                {settings.tagline || 'Turning Memories Into Art'}
               </h1>
               <p className="mt-8 text-lg text-white/80 leading-relaxed max-w-xl animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
                 {settings.description || 'Detailed, handcrafted portraits created from your most meaningful photographs.'}
