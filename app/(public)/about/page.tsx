@@ -60,7 +60,7 @@ export default function AboutPage() {
       </section>
 
       {/* Artistic Style */}
-      <section className="py-16 lg:py-24 bg-secondary/50">
+      <section className="py-16 lg:py-24 bg-background">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             <Reveal className="order-2 lg:order-1">
@@ -108,7 +108,7 @@ export default function AboutPage() {
       </section>
 
       {/* Studio */}
-      <section className="py-16 lg:py-24 bg-secondary/50">
+      <section className="py-16 lg:py-24 bg-background">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <Reveal className="mb-12">
             <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">The Studio</p>

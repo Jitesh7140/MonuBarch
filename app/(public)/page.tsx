@@ -163,7 +163,7 @@ export default function HomePage() {
       </section>
 
       {/* ABOUT PREVIEW */}
-      <section className="py-24 lg:py-32 bg-secondary/50">
+      <section className="py-24 lg:py-32 bg-background">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             <Reveal>
@@ -307,7 +307,7 @@ export default function HomePage() {
 
       {/* TESTIMONIALS */}
       {testimonials.length > 0 && (
-        <section className="py-24 lg:py-32 bg-secondary/50">
+        <section className="py-24 lg:py-32 bg-background">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <Reveal className="mb-16 text-center">
               <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-4">Kind Words</p>
