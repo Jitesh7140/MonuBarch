@@ -5,7 +5,7 @@ import {
   BarChart3, FileText, ImageIcon, LogOut, Mail, MessageSquare,
   Package, PencilLine, Plus, Save, Settings, Star, Upload, X,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase-client';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase-client';
 import { formatINR } from '@/lib/pricing';
 import { getDefaultSettings } from '@/lib/settings';
 import type {
@@ -142,10 +142,14 @@ export default function AdminPage() {
     const username = String(form.get('username') || '').trim();
     const password = String(form.get('password') || '');
     setLoginError('');
+    if (!isSupabaseConfigured) {
+      setLoginError('Supabase is not configured for this deployment. Add the Production environment variables in Vercel and redeploy.');
+      return;
+    }
     const email = ADMIN_ACCOUNTS[username.toLowerCase()];
     if (!email) { setLoginError('Username is not authorised for this dashboard.'); return; }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setLoginError('Login failed. Check the username/password and create the admin user in Supabase Auth first.');
+    if (error) setLoginError(`Login failed: ${error.message}`);
   }
 
   function showNotice(message: string) { setNotice(message); window.setTimeout(() => setNotice(''), 3500); }
