@@ -17,7 +17,9 @@ type ArtworkDraft = Omit<Artwork, 'id' | 'created_at' | 'updated_at'>;
 type ShopCollection = 'print' | 'original';
 type ShopProductDraft = Omit<ShopProduct, 'id' | 'created_at' | 'updated_at'>;
 
-const ADMIN_EMAIL = 'admin@msartik.local';
+const ADMIN_ACCOUNTS: Record<string, string> = {
+  monuadmin: 'ms00582508@gmail.com',
+};
 const menu: { key: Tab; label: string; icon: typeof BarChart3 }[] = [
   { key: 'overview', label: 'Overview', icon: BarChart3 },
   { key: 'artworks', label: 'Portfolio', icon: ImageIcon },
@@ -140,8 +142,9 @@ export default function AdminPage() {
     const username = String(form.get('username') || '').trim();
     const password = String(form.get('password') || '');
     setLoginError('');
-    if (username !== 'admin') { setLoginError('Use the administrator username.'); return; }
-    const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+    const email = ADMIN_ACCOUNTS[username.toLowerCase()];
+    if (!email) { setLoginError('Username is not authorised for this dashboard.'); return; }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setLoginError('Login failed. Check the username/password and create the admin user in Supabase Auth first.');
   }
 
@@ -244,7 +247,7 @@ export default function AdminPage() {
 }
 
 function Login({ onSubmit, error }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void; error: string }) {
-  return <main className="grid min-h-screen place-items-center bg-stone-950 p-6"><form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl border border-stone-700 bg-stone-900 p-7 text-stone-50 shadow-2xl"><p className="font-serif text-4xl">MSARTIK</p><p className="mt-1 text-sm text-stone-400">Admin dashboard</p><div className="mt-8 space-y-4"><Field label="Username"><input required name="username" defaultValue="admin" className={`${inputClass} text-stone-900`} /></Field><Field label="Password"><input required name="password" type="password" className={`${inputClass} text-stone-900`} /></Field></div>{error && <p className="mt-4 text-sm text-red-300">{error}</p>}<button className="mt-6 w-full rounded-md bg-white px-4 py-3 text-sm font-semibold text-stone-950 hover:bg-stone-200">Sign in</button></form></main>;
+  return <main className="grid min-h-screen place-items-center bg-stone-950 p-6"><form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl border border-stone-700 bg-stone-900 p-7 text-stone-50 shadow-2xl"><p className="font-serif text-4xl">MSARTIK</p><p className="mt-1 text-sm text-stone-400">Admin dashboard</p><div className="mt-8 space-y-4"><Field label="Username"><input required name="username" defaultValue="MonuAdmin" autoCapitalize="none" className={`${inputClass} text-stone-900`} /></Field><Field label="Password"><input required name="password" type="password" className={`${inputClass} text-stone-900`} /></Field></div>{error && <p className="mt-4 text-sm text-red-300">{error}</p>}<button className="mt-6 w-full rounded-md bg-white px-4 py-3 text-sm font-semibold text-stone-950 hover:bg-stone-200">Sign in</button></form></main>;
 }
 
 function SectionTitle({ eyebrow, title, children }: { eyebrow: string; title: string; children?: React.ReactNode }) { return <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">{eyebrow}</p><h1 className="mt-1 font-serif text-4xl">{title}</h1></div>{children}</div>; }
