@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Reveal } from '@/components/layout/reveal';
 import { getSiteSettings } from '@/lib/settings';
+import AboutImgg from '@/public/portfolio/About.jpeg';
 
 export default function AboutPage() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -35,7 +36,7 @@ export default function AboutPage() {
             <Reveal>
               <div className="relative aspect-[4/5] image-zoom-container">
                 <Image
-                  src="https://images.pexels.com/photos/3965682/pexels-photo-3965682.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+                  src={AboutImgg}
                   alt="Artist in studio"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
