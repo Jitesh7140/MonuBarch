@@ -10,6 +10,7 @@ import { ArtworkCard } from '@/components/gallery/artwork-card';
 import { supabase } from '@/lib/supabase-client';
 import { getSiteSettings } from '@/lib/settings';
 import type { Artwork, Testimonial } from '@/types';
+import image from '@/public/portfolio/About.jpeg';
 
 const STEPS = [
   { number: '01', title: 'Choose Your Portrait', desc: 'Select your medium, size and number of people.' },
@@ -131,7 +132,7 @@ export default function HomePage() {
             <Reveal>
               <div className="relative aspect-[4/5] image-zoom-container">
                 <Image
-                  src="https://images.pexels.com/photos/31621693/pexels-photo-31621693.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+                  src={image}
                   alt="Artist at work in the studio"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"

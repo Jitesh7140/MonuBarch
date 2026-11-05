@@ -5,7 +5,7 @@ import { MessageCircle } from 'lucide-react';
 import { getSiteSettings, buildWhatsAppLink } from '@/lib/settings';
 
 export function WhatsAppButton() {
-  const [number, setNumber] = useState('919876543210');
+  const [number, setNumber] = useState('918700582508');
 
   useEffect(() => {
     getSiteSettings().then((settings) => {
